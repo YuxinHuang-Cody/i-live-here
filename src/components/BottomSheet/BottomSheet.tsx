@@ -8,7 +8,7 @@ import {
 } from 'react';
 import './BottomSheet.css';
 
-type SnapPoint = 'closed' | 'peek' | 'half' | 'full';
+type SnapPoint = 'closed' | 'half' | 'full';
 
 interface BottomSheetProps {
   open: boolean;
@@ -23,8 +23,6 @@ function snapHeight(snap: SnapPoint, vh: number): number {
   switch (snap) {
     case 'closed':
       return 0;
-    case 'peek':
-      return Math.min(220, vh * 0.32);
     case 'half':
       return vh * 0.88;
     case 'full':
@@ -32,7 +30,7 @@ function snapHeight(snap: SnapPoint, vh: number): number {
   }
 }
 
-const ORDER: SnapPoint[] = ['closed', 'peek', 'half', 'full'];
+const ORDER: SnapPoint[] = ['closed', 'half', 'full'];
 
 /** px/ms — above this counts as a "fling" and jumps in the swipe direction. */
 const FLING_THRESHOLD = 0.4;
