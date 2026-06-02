@@ -1,0 +1,44 @@
+.crosshair-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  z-index: 11;
+  transform: translate(-50%, -100%);
+  animation: crosshair-bob 1.8s ease-in-out infinite;
+}
+
+.crosshair-pin {
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.25));
+}
+
+.crosshair-doing {
+  color: #ff9500;
+}
+
+.crosshair-wishlist {
+  color: #5856d6;
+}
+
+.crosshair-shadow {
+  position: absolute;
+  width: 14px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.25);
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  filter: blur(2px);
+}
+
+@keyframes crosshair-bob {
+  0%,
+  100% {
+    transform: translate(-50%, -100%);
+  }
+  50% {
+    transform: translate(-50%, calc(-100% - 6px));
+  }
+}

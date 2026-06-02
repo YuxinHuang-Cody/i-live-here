@@ -1,0 +1,47 @@
+:root {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    'SF Pro Text',
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 16px;
+  color: #1d1d1f;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body {
+  background: #f5f5f7;
+  /* avoid iOS pull-to-refresh while panning the map */
+  touch-action: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: #007aff;
+}

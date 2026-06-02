@@ -1,0 +1,185 @@
+.pin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.pin-form-title {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.pin-form-coords {
+  margin: 0;
+  font-size: 12px;
+  color: #6e6e73;
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-form-segment {
+  display: flex;
+  background: rgba(120, 120, 128, 0.12);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.pin-form-segment-btn {
+  flex: 1;
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #1d1d1f;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+
+.pin-form-segment-btn.is-active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.pin-form-segment-btn.kind-doing.is-active {
+  color: #ff9500;
+}
+
+.pin-form-segment-btn.kind-wishlist.is-active {
+  color: #5856d6;
+}
+
+.pin-form-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #6e6e73;
+  font-weight: 500;
+}
+
+.pin-form-input,
+.pin-form-textarea {
+  appearance: none;
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: #1d1d1f;
+  font-family: inherit;
+  resize: none;
+}
+
+.pin-form-input:focus,
+.pin-form-textarea:focus {
+  outline: none;
+  border-color: #007aff;
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+}
+
+.pin-form-file-hidden {
+  display: none;
+}
+
+.pin-form-image-add {
+  appearance: none;
+  border: 1px dashed rgba(60, 60, 67, 0.3);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  padding: 22px;
+  font-size: 14px;
+  color: #6e6e73;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pin-form-image-add:hover:not(:disabled) {
+  background: rgba(0, 122, 255, 0.06);
+  border-color: #007aff;
+  color: #007aff;
+}
+
+.pin-form-image-add:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.pin-form-image-preview {
+  position: relative;
+  width: 100%;
+  max-height: 280px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  background: #000;
+}
+
+.pin-form-image-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: cover;
+}
+
+.pin-form-image-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  appearance: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.pin-form-image-error {
+  color: #ff3b30;
+  font-size: 12px;
+}
+
+.pin-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.pin-form-btn {
+  flex: 1;
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pin-form-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pin-form-btn-primary {
+  background: #007aff;
+  color: white;
+}
+
+.pin-form-btn-secondary {
+  background: rgba(120, 120, 128, 0.12);
+  color: #1d1d1f;
+}

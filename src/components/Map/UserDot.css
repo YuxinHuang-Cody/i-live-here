@@ -1,0 +1,40 @@
+.user-dot {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.user-dot-core {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #007aff;
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 122, 255, 0.45);
+  z-index: 2;
+}
+
+.user-dot-pulse {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 122, 255, 0.25);
+  animation: user-dot-pulse 1.8s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes user-dot-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,123 @@
+.pin-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pin-detail-tag {
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.pin-detail-tag.kind-doing {
+  background: rgba(255, 149, 0, 0.15);
+  color: #c46b00;
+}
+
+.pin-detail-tag.kind-wishlist {
+  background: rgba(88, 86, 214, 0.15);
+  color: #4845b4;
+}
+
+.pin-detail-title {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.pin-detail-meta {
+  margin: 0;
+  font-size: 13px;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pin-detail-author {
+  font-weight: 600;
+  color: #007aff;
+}
+
+.pin-detail-dot {
+  color: #6e6e73;
+}
+
+.pin-detail-meta > :not(.pin-detail-author):not(.pin-detail-dot) {
+  color: #6e6e73;
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-detail-coords {
+  margin: 0;
+  font-size: 12px;
+  color: #6e6e73;
+  font-variant-numeric: tabular-nums;
+}
+
+.pin-detail-image {
+  margin: 4px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.pin-detail-image img {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+}
+
+.pin-detail-note {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: #1d1d1f;
+  white-space: pre-wrap;
+}
+
+.pin-detail-like-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: 4px;
+}
+
+.pin-detail-like {
+  appearance: none;
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6e6e73;
+  cursor: pointer;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.pin-detail-like:active {
+  transform: scale(0.96);
+}
+
+.pin-detail-like.is-liked {
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.08);
+  border-color: rgba(255, 59, 48, 0.4);
+}
+
+.pin-detail-delete {
+  background: rgba(255, 59, 48, 0.12);
+  color: #ff3b30;
+}
