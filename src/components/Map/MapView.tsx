@@ -42,6 +42,14 @@ export function MapView({
   useEffect(() => {
     if (hasAutoCenteredRef.current || !location) return;
     hasAutoCenteredRef.current = true;
+    // Update view state directly — this controls the Map even if mapRef hasn't
+    // settled yet. flyTo gives a smooth animation when the map is ready.
+    setView((curr) => ({
+      ...curr,
+      longitude: location.lng,
+      latitude: location.lat,
+      zoom: 16,
+    }));
     mapRef.current?.flyTo({
       center: [location.lng, location.lat],
       zoom: 16,
