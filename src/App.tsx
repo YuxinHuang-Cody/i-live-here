@@ -60,7 +60,6 @@ export default function App() {
       <BottomSheet
         open={sheet.kind !== 'none'}
         onClose={closeSheet}
-        initialSnap={sheet.kind === 'create' ? 'full' : 'half'}
         hideScrim={sheet.kind === 'detail'}
       >
         {sheet.kind === 'create' && (

@@ -38,6 +38,7 @@ export function MapView({
   }>({ ...INITIAL_VIEW });
   const { location, status, request } = useUserLocation();
   const hasAutoCenteredRef = useRef(false);
+  const placingFlewRef = useRef(false);
 
   useEffect(() => {
     if (hasAutoCenteredRef.current || !location) return;
@@ -48,6 +49,23 @@ export function MapView({
       duration: 800,
     });
   }, [location]);
+
+  // Each time the user enters placing mode, snap the crosshair to their
+  // current GPS spot. If location is still loading we'll fly as soon as it
+  // arrives. Reset the flag on exit so the next placement re-flies.
+  useEffect(() => {
+    if (!placingKind) {
+      placingFlewRef.current = false;
+      return;
+    }
+    if (placingFlewRef.current || !location) return;
+    placingFlewRef.current = true;
+    mapRef.current?.flyTo({
+      center: [location.lng, location.lat],
+      zoom: 17,
+      duration: 500,
+    });
+  }, [placingKind, location]);
 
   const onMove = useCallback((e: ViewStateChangeEvent) => {
     setView({

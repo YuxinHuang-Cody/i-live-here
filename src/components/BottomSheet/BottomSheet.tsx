@@ -8,59 +8,31 @@ import {
 } from 'react';
 import './BottomSheet.css';
 
-type SnapPoint = 'closed' | 'half' | 'full';
-
 interface BottomSheetProps {
   open: boolean;
   onClose: () => void;
-  initialSnap?: Exclude<SnapPoint, 'closed'>;
   children: ReactNode;
   /** Hide the dim/scrim behind the sheet — useful when sheet is informational over the map. */
   hideScrim?: boolean;
 }
 
-function snapHeight(snap: SnapPoint, vh: number): number {
-  switch (snap) {
-    case 'closed':
-      return 0;
-    case 'half':
-      return vh * 0.88;
-    case 'full':
-      return vh * 0.95;
-  }
-}
-
-const ORDER: SnapPoint[] = ['closed', 'half', 'full'];
-
-/** px/ms — above this counts as a "fling" and jumps in the swipe direction. */
+/** Fraction of viewport height the sheet occupies when open. */
+const OPEN_RATIO = 0.95;
+/** px/ms — a down-fling faster than this dismisses regardless of distance. */
 const FLING_THRESHOLD = 0.4;
-/** Snaps lying in the direction of the drag get this much of a distance
- *  discount when picking the nearest one — so a moderate drag still commits
- *  instead of springing back. */
-const DIRECTION_DISCOUNT = 0.5;
+/** Drag the sheet shorter than this fraction of its open height → dismiss. */
+const DISMISS_AT = 0.7;
 
-export function BottomSheet({
-  open,
-  onClose,
-  initialSnap = 'half',
-  children,
-  hideScrim = false,
-}: BottomSheetProps) {
-  const [snap, setSnap] = useState<SnapPoint>(open ? initialSnap : 'closed');
+export function BottomSheet({ open, onClose, children, hideScrim = false }: BottomSheetProps) {
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [vh, setVh] = useState(() => window.innerHeight);
   const dragStateRef = useRef<{
     startY: number;
-    startHeight: number;
     lastY: number;
     lastT: number;
     velocity: number;
   } | null>(null);
-
-  useEffect(() => {
-    setSnap(open ? initialSnap : 'closed');
-  }, [open, initialSnap]);
 
   useEffect(() => {
     const onResize = () => setVh(window.innerHeight);
@@ -68,51 +40,29 @@ export function BottomSheet({
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const targetHeight = snapHeight(snap, vh);
-  const renderedHeight = Math.max(0, Math.min(vh, targetHeight + dragOffset));
+  const openHeight = vh * OPEN_RATIO;
+  // Only let the sheet shrink, not grow past its open height.
+  const clampedOffset = Math.min(0, dragOffset);
+  const renderedHeight = Math.max(0, openHeight + clampedOffset);
 
   const settle = useCallback(
-    (finalHeight: number, velocity: number, startSnapHeight: number) => {
-      const candidates: SnapPoint[] = open ? ORDER : ['closed'];
-
-      // Velocity-biased: a clear fling jumps one snap in that direction.
-      if (Math.abs(velocity) > FLING_THRESHOLD) {
-        const currentIdx = ORDER.indexOf(snap);
-        const dir = velocity > 0 ? -1 : +1; // down-fling → smaller; up-fling → larger
-        const nextIdx = Math.max(0, Math.min(ORDER.length - 1, currentIdx + dir));
-        const target = ORDER[nextIdx];
-        if (target === 'closed') onClose();
-        else setSnap(target);
+    (finalHeight: number, velocity: number) => {
+      // Down-fling: dismiss regardless of distance.
+      if (velocity > FLING_THRESHOLD) {
+        onClose();
         return;
       }
-
-      // Direction-biased nearest snap: snaps lying in the user's drag direction
-      // get a distance discount so a small-to-moderate drag commits instead of
-      // springing back to the starting snap.
-      const draggedDown = startSnapHeight > finalHeight;
-      let best: SnapPoint = snap;
-      let bestScore = Infinity;
-      for (const s of candidates) {
-        const h = snapHeight(s, vh);
-        let score = Math.abs(h - finalHeight);
-        const inDragDir =
-          (draggedDown && h < startSnapHeight) || (!draggedDown && h > startSnapHeight);
-        if (inDragDir) score *= DIRECTION_DISCOUNT;
-        if (score < bestScore) {
-          bestScore = score;
-          best = s;
-        }
+      // Dragged down past the threshold: dismiss. Otherwise spring back.
+      if (finalHeight < openHeight * DISMISS_AT) {
+        onClose();
       }
-      if (best === 'closed') onClose();
-      else setSnap(best);
     },
-    [open, onClose, snap, vh],
+    [onClose, openHeight],
   );
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     dragStateRef.current = {
       startY: e.clientY,
-      startHeight: targetHeight,
       lastY: e.clientY,
       lastT: performance.now(),
       velocity: 0,
@@ -126,27 +76,23 @@ export function BottomSheet({
     if (!state) return;
     const now = performance.now();
     const dt = Math.max(1, now - state.lastT);
-    // Smooth velocity with an exponential-moving-average so a single jittery
-    // sample doesn't trigger an unwanted fling.
     const instant = (e.clientY - state.lastY) / dt;
     state.velocity = state.velocity * 0.6 + instant * 0.4;
     state.lastY = e.clientY;
     state.lastT = now;
-    const dy = e.clientY - state.startY;
-    setDragOffset(-dy);
+    setDragOffset(-(e.clientY - state.startY));
   };
 
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     const state = dragStateRef.current;
     if (!state) return;
     const dy = e.clientY - state.startY;
-    const finalHeight = state.startHeight - dy;
+    const finalHeight = openHeight - dy;
     const velocity = state.velocity;
-    const startSnapHeight = state.startHeight;
     dragStateRef.current = null;
     setIsDragging(false);
     setDragOffset(0);
-    settle(finalHeight, velocity, startSnapHeight);
+    settle(finalHeight, velocity);
   };
 
   return (
