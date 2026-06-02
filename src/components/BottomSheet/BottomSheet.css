@@ -34,25 +34,35 @@
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
 
-.bs-handle-area {
+.bs-drag-area {
   flex: 0 0 auto;
-  padding: 10px 0 6px;
+  /* 44 px tall touch target — handle indicator sits centered inside. */
+  height: 44px;
   display: flex;
+  align-items: center;
   justify-content: center;
   cursor: grab;
   touch-action: none;
   user-select: none;
+  /* Make the whole area subtly different so users see "you can grab here". */
+  -webkit-tap-highlight-color: transparent;
 }
 
-.bs-handle-area:active {
+.bs-drag-area:active {
   cursor: grabbing;
 }
 
+.bs-drag-area:active .bs-handle {
+  background: rgba(60, 60, 67, 0.55);
+  transform: scaleX(1.15);
+}
+
 .bs-handle {
-  width: 36px;
+  width: 44px;
   height: 5px;
   border-radius: 999px;
-  background: rgba(60, 60, 67, 0.3);
+  background: rgba(60, 60, 67, 0.35);
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .bs-body {
