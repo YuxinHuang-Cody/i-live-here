@@ -135,15 +135,12 @@ export function MapView({
 
       {placingKind && <CenterCrosshair kind={placingKind} />}
 
-      <div className="map-top-controls">
+      <div className="map-side-controls">
         <AddPinButton
           placingKind={placingKind}
           onStartPlacing={onStartPlacing}
           onCancelPlacing={onCancelPlacing}
         />
-      </div>
-
-      <div className="map-side-controls">
         <LocateButton onClick={flyToUser} status={status} />
       </div>
 
