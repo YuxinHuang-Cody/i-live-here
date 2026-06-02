@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { compressImage } from '../../services/imageCompress';
 import { prefs } from '../../services/prefs';
 import { ANONYMOUS_AUTHOR, type PinDraft, type PinKind } from '../../types/pin';
@@ -22,11 +22,22 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [author, setAuthor] = useState(() => prefs.getLastAuthor());
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>(undefined);
+  const [imageBlob, setImageBlob] = useState<Blob | undefined>(undefined);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | undefined>(undefined);
   const [imageError, setImageError] = useState<string | null>(null);
   const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!imageBlob) {
+      setImagePreviewUrl(undefined);
+      return;
+    }
+    const url = URL.createObjectURL(imageBlob);
+    setImagePreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageBlob]);
 
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,8 +46,8 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
     setImageError(null);
     setCompressing(true);
     try {
-      const dataUrl = await compressImage(file);
-      setImageDataUrl(dataUrl);
+      const blob = await compressImage(file);
+      setImageBlob(blob);
     } catch (err) {
       setImageError(err instanceof Error ? err.message : '图片处理失败');
     } finally {
@@ -58,7 +69,7 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
         lng,
         lat,
         author: trimmedAuthor || ANONYMOUS_AUTHOR,
-        imageDataUrl,
+        imageBlob,
       });
     } finally {
       setSubmitting(false);
@@ -118,13 +129,13 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
           onChange={handleImageChange}
           className="pin-form-file-hidden"
         />
-        {imageDataUrl ? (
+        {imagePreviewUrl ? (
           <div className="pin-form-image-preview">
-            <img src={imageDataUrl} alt="预览" />
+            <img src={imagePreviewUrl} alt="预览" />
             <button
               type="button"
               className="pin-form-image-remove"
-              onClick={() => setImageDataUrl(undefined)}
+              onClick={() => setImageBlob(undefined)}
               aria-label="移除图片"
             >
               ✕

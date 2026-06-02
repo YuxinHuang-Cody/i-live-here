@@ -5,6 +5,7 @@ import './PinDetail.css';
 interface Props {
   pin: Pin;
   liked: boolean;
+  owned: boolean;
   onToggleLike: (id: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
@@ -15,7 +16,7 @@ const KIND_LABEL = {
   wishlist: '我想去做的事情',
 } as const;
 
-export function PinDetail({ pin, liked, onToggleLike, onDelete, onClose }: Props) {
+export function PinDetail({ pin, liked, owned, onToggleLike, onDelete, onClose }: Props) {
   return (
     <div className="pin-detail">
       <div className={`pin-detail-tag kind-${pin.kind}`}>{KIND_LABEL[pin.kind]}</div>
@@ -29,9 +30,9 @@ export function PinDetail({ pin, liked, onToggleLike, onDelete, onClose }: Props
         {pin.lat.toFixed(5)}, {pin.lng.toFixed(5)}
       </p>
 
-      {pin.imageDataUrl && (
+      {pin.imageUrl && (
         <div className="pin-detail-image">
-          <img src={pin.imageDataUrl} alt={pin.title} />
+          <img src={pin.imageUrl} alt={pin.title} loading="lazy" />
         </div>
       )}
 
@@ -61,15 +62,17 @@ export function PinDetail({ pin, liked, onToggleLike, onDelete, onClose }: Props
         <button type="button" className="pin-form-btn pin-form-btn-secondary" onClick={onClose}>
           关闭
         </button>
-        <button
-          type="button"
-          className="pin-form-btn pin-detail-delete"
-          onClick={() => {
-            if (confirm('确定删除这个标记吗？')) onDelete(pin.id);
-          }}
-        >
-          删除
-        </button>
+        {owned && (
+          <button
+            type="button"
+            className="pin-form-btn pin-detail-delete"
+            onClick={() => {
+              if (confirm('确定删除这个标记吗？')) onDelete(pin.id);
+            }}
+          >
+            删除
+          </button>
+        )}
       </div>
     </div>
   );

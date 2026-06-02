@@ -1,8 +1,10 @@
 import { ANONYMOUS_AUTHOR, type Pin, type PinDraft } from '../types/pin';
+import { blobToDataUrl } from './imageCompress';
+import { supabasePinService } from './supabasePinService';
 
 /**
- * Storage-agnostic pin repository. Swap the implementation here when a
- * real backend exists — UI code only touches this interface.
+ * Storage-agnostic pin repository. The UI only touches this interface,
+ * so the choice between localStorage and a real backend lives here.
  */
 export interface PinService {
   list(): Promise<Pin[]>;
@@ -10,6 +12,8 @@ export interface PinService {
   remove(id: string): Promise<void>;
   like(id: string): Promise<Pin>;
   unlike(id: string): Promise<Pin>;
+  /** Optional realtime hook — local impl returns nothing. */
+  subscribe?(onChange: () => void): () => void;
 }
 
 const STORAGE_KEY = 'ilh.pins.v1';
@@ -26,7 +30,12 @@ function normalize(raw: Record<string, unknown>): Pin {
     likes: typeof raw.likes === 'number' ? raw.likes : 0,
     author:
       typeof raw.author === 'string' && raw.author.trim() ? raw.author : ANONYMOUS_AUTHOR,
-    imageDataUrl: typeof raw.imageDataUrl === 'string' ? raw.imageDataUrl : undefined,
+    imageUrl:
+      typeof raw.imageUrl === 'string'
+        ? raw.imageUrl
+        : typeof raw.imageDataUrl === 'string' // back-compat with v0 storage
+          ? raw.imageDataUrl
+          : undefined,
   };
 }
 
@@ -47,9 +56,7 @@ function writeAll(pins: Pin[]): void {
 }
 
 function uid(): string {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
@@ -69,9 +76,15 @@ export const localPinService: PinService = {
   },
   async create(draft) {
     const author = draft.author.trim() || ANONYMOUS_AUTHOR;
+    const imageUrl = draft.imageBlob ? await blobToDataUrl(draft.imageBlob) : undefined;
     const pin: Pin = {
-      ...draft,
+      kind: draft.kind,
+      title: draft.title,
+      note: draft.note,
+      lng: draft.lng,
+      lat: draft.lat,
       author,
+      imageUrl,
       id: uid(),
       createdAt: Date.now(),
       likes: 0,
@@ -92,21 +105,5 @@ export const localPinService: PinService = {
   },
 };
 
-/**
- * Example future implementation — left here as documentation, not wired up.
- *
- * export const httpPinService: PinService = {
- *   list: () => fetch('/api/pins').then((r) => r.json()),
- *   create: (draft) =>
- *     fetch('/api/pins', {
- *       method: 'POST',
- *       headers: { 'content-type': 'application/json' },
- *       body: JSON.stringify(draft),
- *     }).then((r) => r.json()),
- *   remove: (id) => fetch(`/api/pins/${id}`, { method: 'DELETE' }).then(() => undefined),
- *   like: (id) => fetch(`/api/pins/${id}/like`, { method: 'POST' }).then((r) => r.json()),
- *   unlike: (id) => fetch(`/api/pins/${id}/like`, { method: 'DELETE' }).then((r) => r.json()),
- * };
- */
-
-export const pinService: PinService = localPinService;
+export const pinService: PinService = supabasePinService ?? localPinService;
+export const usingSupabase = supabasePinService !== null;

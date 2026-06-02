@@ -13,7 +13,7 @@ type Sheet =
   | { kind: 'detail'; pin: Pin };
 
 export default function App() {
-  const { pins, likedSet, addPin, removePin, toggleLike } = usePins();
+  const { pins, likedSet, isOwned, addPin, removePin, toggleLike } = usePins();
   const [placingKind, setPlacingKind] = useState<PinKind | null>(null);
   const [sheet, setSheet] = useState<Sheet>({ kind: 'none' });
 
@@ -76,6 +76,7 @@ export default function App() {
           <PinDetail
             pin={pins.find((p) => p.id === sheet.pin.id) ?? sheet.pin}
             liked={likedSet.has(sheet.pin.id)}
+            owned={isOwned(sheet.pin.id)}
             onToggleLike={(id) => {
               void toggleLike(id);
             }}
