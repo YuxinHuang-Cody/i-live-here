@@ -95,3 +95,17 @@ create policy "anyone can read pin images"
   on storage.objects for select
   to anon, authenticated
   using (bucket_id = 'pin-images');
+
+-- Storage API-side cleanup. The policy only allows deleting an object whose
+-- name is no longer referenced by any pin — so a malicious client can't drop
+-- someone else's live photo, but the post-delete cleanup in the app works.
+drop policy if exists "anyone can delete orphan pin images" on storage.objects;
+create policy "anyone can delete orphan pin images"
+  on storage.objects for delete
+  to anon, authenticated
+  using (
+    bucket_id = 'pin-images'
+    and not exists (
+      select 1 from public.pins where image_path = storage.objects.name
+    )
+  );

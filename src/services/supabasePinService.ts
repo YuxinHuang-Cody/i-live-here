@@ -101,8 +101,27 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
     async remove(id) {
       const token = prefs.getOwnerToken(id);
       if (!token) throw new Error('你不是这个标记的创建者');
+
+      // Grab the image path before the row disappears.
+      const { data: pinRow } = await client
+        .from('pins')
+        .select('image_path')
+        .eq('id', id)
+        .maybeSingle();
+
       const { error } = await client.rpc('delete_pin', { p_id: id, p_token: token });
       if (error) throw error;
+
+      // Storage cleanup goes through the Storage API (Supabase blocks raw SQL
+      // deletes on storage.objects). The orphan-only RLS policy will only let
+      // this through if the pin row really is gone.
+      if (pinRow?.image_path) {
+        await client.storage
+          .from(PIN_IMAGES_BUCKET)
+          .remove([pinRow.image_path])
+          .catch(() => undefined);
+      }
+
       prefs.removeOwnerToken(id);
     },
 
