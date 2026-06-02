@@ -26,7 +26,7 @@ function snapHeight(snap: SnapPoint, vh: number): number {
     case 'peek':
       return Math.min(220, vh * 0.32);
     case 'half':
-      return vh * 0.55;
+      return vh * 0.72;
     case 'full':
       return vh * 0.9;
   }
