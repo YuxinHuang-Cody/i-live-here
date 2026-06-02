@@ -35,7 +35,11 @@ function snapHeight(snap: SnapPoint, vh: number): number {
 const ORDER: SnapPoint[] = ['closed', 'peek', 'half', 'full'];
 
 /** px/ms — above this counts as a "fling" and jumps in the swipe direction. */
-const FLING_THRESHOLD = 0.55;
+const FLING_THRESHOLD = 0.4;
+/** Snaps lying in the direction of the drag get this much of a distance
+ *  discount when picking the nearest one — so a moderate drag still commits
+ *  instead of springing back. */
+const DIRECTION_DISCOUNT = 0.5;
 
 export function BottomSheet({
   open,
@@ -67,10 +71,10 @@ export function BottomSheet({
   }, []);
 
   const targetHeight = snapHeight(snap, vh);
-  const renderedHeight = Math.max(0, targetHeight + dragOffset);
+  const renderedHeight = Math.max(0, Math.min(vh, targetHeight + dragOffset));
 
   const settle = useCallback(
-    (finalHeight: number, velocity: number) => {
+    (finalHeight: number, velocity: number, startSnapHeight: number) => {
       const candidates: SnapPoint[] = open ? ORDER : ['closed'];
 
       // Velocity-biased: a clear fling jumps one snap in that direction.
@@ -84,13 +88,20 @@ export function BottomSheet({
         return;
       }
 
-      // Otherwise snap to nearest height.
-      let best: SnapPoint = candidates[0];
-      let bestDiff = Infinity;
+      // Direction-biased nearest snap: snaps lying in the user's drag direction
+      // get a distance discount so a small-to-moderate drag commits instead of
+      // springing back to the starting snap.
+      const draggedDown = startSnapHeight > finalHeight;
+      let best: SnapPoint = snap;
+      let bestScore = Infinity;
       for (const s of candidates) {
-        const diff = Math.abs(snapHeight(s, vh) - finalHeight);
-        if (diff < bestDiff) {
-          bestDiff = diff;
+        const h = snapHeight(s, vh);
+        let score = Math.abs(h - finalHeight);
+        const inDragDir =
+          (draggedDown && h < startSnapHeight) || (!draggedDown && h > startSnapHeight);
+        if (inDragDir) score *= DIRECTION_DISCOUNT;
+        if (score < bestScore) {
+          bestScore = score;
           best = s;
         }
       }
@@ -133,10 +144,11 @@ export function BottomSheet({
     const dy = e.clientY - state.startY;
     const finalHeight = state.startHeight - dy;
     const velocity = state.velocity;
+    const startSnapHeight = state.startHeight;
     dragStateRef.current = null;
     setIsDragging(false);
     setDragOffset(0);
-    settle(finalHeight, velocity);
+    settle(finalHeight, velocity, startSnapHeight);
   };
 
   return (
@@ -146,7 +158,7 @@ export function BottomSheet({
         className={`bs-sheet ${open ? 'is-open' : 'is-closed'}`}
         style={{
           height: open ? `${renderedHeight}px` : '0px',
-          transition: isDragging ? 'none' : 'height 0.32s cubic-bezier(.22,.9,.22,1)',
+          transition: isDragging ? 'none' : 'height 0.24s cubic-bezier(.22,.9,.22,1)',
         }}
         role="dialog"
         aria-modal="true"
