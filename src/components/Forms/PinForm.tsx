@@ -160,7 +160,7 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
           className="pin-form-input"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          placeholder={`留空 = ${ANONYMOUS_AUTHOR}`}
+          placeholder={ANONYMOUS_AUTHOR}
           maxLength={24}
         />
       </label>
