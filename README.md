@@ -1,75 +1,135 @@
 # i-live-here
 
-伦敦地图打标 MVP — 一个 web app，可以在地图上标注「我在这里做的好玩事情」和「想去做的事情」。
+**English** · [简体中文](./README.zh-CN.md)
 
-## 技术栈
+A London map-pinning MVP — a web app for marking "fun things I do here" and "things I want to do" on a map.
 
-- Vite + React 18 + TypeScript
-- react-map-gl（Mapbox GL）做底图
-- 数据层 `src/services/pinService.ts` 两种实现：
-  - **本地模式**（默认）：pins / 图片 / 点赞 全在浏览器 localStorage
-  - **Supabase 模式**（填了 env vars 自动启用）：Postgres + Storage + Realtime
+## Tech stack
 
-## 启动
+- **Vite + React 18 + TypeScript** (ESM, no bundler config beyond `vite.config.ts`)
+- **react-map-gl** (Mapbox GL v3) for the base map; default style is `mapbox://styles/mapbox/standard`
+- **@supabase/supabase-js** for the optional cloud backend (Postgres + Storage + Realtime)
+- No state-management library — local React state plus a small custom hook (`usePins`)
+- No CSS framework — plain CSS per-component
+
+Data layer `src/services/pinService.ts` has two implementations behind one interface:
+
+- **Local mode** (default): pins / images / likes all live in the browser's localStorage. Images are inlined as data URLs.
+- **Supabase mode** (auto-enabled when both `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` are set): pins in Postgres, images in a public Storage bucket, list updates via a Realtime channel.
+
+## Getting started
 
 ```bash
 npm install
 
 cp .env.example .env.local
-# 编辑 .env.local，至少填 VITE_MAPBOX_TOKEN
-# Supabase 的两个变量留空 → 本地模式；都填上 → Supabase 模式
+# Edit .env.local — at minimum fill in VITE_MAPBOX_TOKEN.
+# Leave the two Supabase vars empty → local mode; fill them both in → Supabase mode.
 
-npm run dev
+npm run dev      # vite dev server on http://localhost:5173
 ```
 
-打开 http://localhost:5173 。
+### Scripts
 
-## 接 Supabase（多人共享 + 持久化）
+| Script | What it does |
+|---|---|
+| `npm run dev` | Vite dev server with HMR |
+| `npm run build` | `tsc -b` then `vite build` → `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run typecheck` | Project-references type check, no emit |
 
-1. **建项目** — 在 https://supabase.com/dashboard 新建项目，等几分钟启动。
-2. **跑 SQL** — Studio 左侧 SQL Editor → New query → 粘 `supabase/setup.sql` 内容 → Run。它会建表、加 RLS、建 RPC、建 storage bucket、开 realtime。
-3. **拿凭据** — Project Settings → API：
-   - `Project URL` → `.env.local` 的 `VITE_SUPABASE_URL`
+### Environment variables
+
+All vars are `VITE_*` prefixed so Vite exposes them to the client bundle.
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `VITE_MAPBOX_TOKEN` | yes | Public Mapbox access token (`pk.*`). Lock it down with URL restrictions in the Mapbox dashboard. |
+| `VITE_SUPABASE_URL` | optional | Supabase project URL. Empty → local mode. |
+| `VITE_SUPABASE_ANON_KEY` | optional | Supabase anon public key. Must be paired with the URL. |
+
+### Browser requirements
+
+Uses `createImageBitmap` (with `imageOrientation: 'from-image'`), `crypto.randomUUID`, the Geolocation API, and CSS features common to evergreen browsers — modern Chrome / Safari / Firefox / Edge. No IE / old-Safari fallbacks.
+
+## Wiring up Supabase (shared + persistent)
+
+1. **Create a project** — at https://supabase.com/dashboard, wait a few minutes for it to spin up.
+2. **Run the SQL** — in Studio's left sidebar: SQL Editor → New query → paste the contents of `supabase/setup.sql` → Run. The script is idempotent — safe to re-run. It creates the `pins` table, applies RLS, adds the `toggle_pin_like` and `delete_pin` RPCs, creates the `pin-images` storage bucket and its policies, and adds the table to the `supabase_realtime` publication.
+3. **Grab credentials** — Project Settings → API:
+   - `Project URL` → `VITE_SUPABASE_URL` in `.env.local`
    - `anon public` → `VITE_SUPABASE_ANON_KEY`
-4. 重启 `npm run dev`。控制台日志里如果看到 realtime channel 订阅，就成了。
-5. 部署到 Vercel 时，把这两个变量也加到 Vercel 的 Environment Variables 里。
+4. Restart `npm run dev`. If you see a realtime channel subscription log in the console, you're good.
+5. When deploying to Vercel (or any host), add the same two vars to the host's Environment Variables.
 
-### Supabase 模式下的安全模型
+### Security model in Supabase mode
 
-- **匿名读写**：任何访客都能列出所有 pin、新建 pin、点赞。
-- **删除受 owner_token 保护**：创建 pin 时客户端生成一个随机 token 存在 localStorage，删除时通过 `delete_pin(id, token)` RPC 验证。换设备/清缓存 → 失去删除权（但 pin 还在）。
-- **图片 bucket 是公开读**（getPublicUrl 才能用）；上传仅允许写到 `pin-images` 桶。
-- **likes 走 RPC**，没法直接 update 表，防止刷负数。
-- 没有真正的身份系统，所以仍然可被刷垃圾。要严肃上线建议加 Supabase Auth（哪怕只是匿名 sessions）+ 简单 rate limit。
+- **Anonymous read/write**: any visitor can list all pins, create pins, and like them. There is no auth.
+- **Reads exclude `owner_token`**: a column-level `GRANT SELECT (...)` skips the token column, so even though RLS allows `select` on the row, anon clients can't read other users' tokens.
+- **Deletes are gated by an `owner_token`**: when a pin is created, the client generates a random token, stores it in localStorage under that pin's id, and includes it on the row. Deletion goes through the `delete_pin(id, token)` RPC, which only deletes if the token matches. Switch devices or clear cache → you lose delete rights, but the pin stays.
+- **Direct `update` / `delete` on the table is blocked** — there is no policy granting either. All mutations go through RPCs.
+- **Likes go through `toggle_pin_like(id, delta)`** — clamped to `>= 0` server-side so the count can't be pushed negative.
+- **Image bucket** `pin-images` is publicly readable (required for `getPublicUrl`). Uploads are restricted to that bucket. A delete policy lets anyone delete an *orphan* image (one no longer referenced by any pin), which powers the post-delete cleanup in `supabasePinService` — but it can't drop a live photo.
+- No real identity system, so spam is still possible. For a serious launch, add Supabase Auth (even anonymous sessions) plus rate limiting.
 
-## 操作
+## Usage
 
-- 拖拽 / 双指缩放地图
-- 进站自动定位到你当前位置（拒绝授权则退回 Jeremy Bentham Room）
-- 右上角 ➕ → 选「在这里做的好玩事情」或「想去做的事情」
-- 选完后地图中心出现一个浮动 pin，挪地图到目标位置 → 点底部「在这里打标」
-- 表单从下方上滑：标题 / 展开说说 / 图片 / 名字（留空 = 栖居者）
-- 点已有 pin 看详情，可以点赞、（自己的可以）删除
+- Drag / pinch to zoom the map.
+- On first load, the app asks for geolocation and auto-centers on you. If denied, it falls back to the **Jeremy Bentham Room** at UCL (`-0.13396, 51.5246`, zoom 16.4) — see `src/config.ts` to change.
+- Top-right ➕ → pick "fun thing I do here" (`doing`) or "thing I want to do" (`wishlist`).
+- A floating pin appears at the map center with a crosshair — pan the map to your target spot → tap **Pin it here** at the bottom.
+- A bottom sheet slides up: **title** / **longer note** / **image** / **name** (blank → `栖居者` / "inhabitant").
+- Images are resized to max 1200px on the long edge and re-encoded as JPEG (quality 0.85) before storage — EXIF orientation is respected. In local mode they're inlined as data URLs; in Supabase mode they're uploaded to the bucket and the row stores the path.
+- Tap an existing pin to see details, like it, or — if it's yours (i.e. you have its `ownerToken` in localStorage) — delete it.
 
-## 目录
+## Data model
+
+```ts
+type PinKind = 'doing' | 'wishlist';
+
+interface Pin {
+  id: string;
+  kind: PinKind;
+  title: string;
+  note: string;
+  lng: number;
+  lat: number;
+  author: string;     // blank input → '栖居者' (anonymous)
+  imageUrl?: string;  // data URL (local) or public Supabase URL
+  likes: number;      // clamped to >= 0
+  createdAt: number;  // epoch ms
+}
+```
+
+Per-browser preferences in localStorage (`src/services/prefs.ts`):
+
+- which pins this browser has liked (so the UI shows the toggled state)
+- last-used author name (prefilled in the form)
+- per-pin `ownerToken` (Supabase mode), used to authorize deletion
+
+## Layout
 
 ```
 src/
   components/
-    Map/             地图、➕ 按钮、十字定位、Marker、定位按钮、用户蓝点
-    BottomSheet/     可拖拽底部抽屉
-    Forms/           新建表单 + 详情卡片
+    Map/             MapView, ➕ button, crosshair, pin markers, locate button, user blue dot
+    BottomSheet/     draggable bottom sheet
+    Forms/           new-pin form + detail card
   hooks/
-    usePins.ts       pin 列表 + likes + ownership
-    useUserLocation.ts  geolocation
+    usePins.ts          pin list + likes + ownership; wires realtime in Supabase mode
+    useUserLocation.ts  geolocation wrapper
   services/
-    pinService.ts          接口 + 自动切换 + 本地实现
-    supabasePinService.ts  Supabase 实现
-    supabase.ts            client
-    imageCompress.ts       压图
-    prefs.ts               本地用户偏好（liked / lastAuthor / ownerToken）
-  types/pin.ts
-  config.ts          初始视图、Mapbox token、style
+    pinService.ts          interface + auto-switching + local implementation
+    supabasePinService.ts  Supabase implementation (Postgres + Storage + Realtime)
+    supabase.ts            client (null if env vars missing)
+    imageCompress.ts       resize + JPEG re-encode + dataURL helper
+    prefs.ts               local user prefs (liked / lastAuthor / ownerToken)
+  types/pin.ts        Pin / PinDraft / PinKind / ANONYMOUS_AUTHOR
+  config.ts           INITIAL_VIEW, MAPBOX_TOKEN, MAP_STYLE
 supabase/
-  setup.sql          一键建表 + RLS + RPC + bucket
+  setup.sql           one-shot: tables + RLS + RPCs + bucket + realtime
 ```
+
+## Deploying
+
+Any static host works (Vercel, Netlify, Cloudflare Pages, etc.). Build command `npm run build`, output `dist/`. Don't forget to set `VITE_MAPBOX_TOKEN` (and optionally the two Supabase vars) in the host's environment.
