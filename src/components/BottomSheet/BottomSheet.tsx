@@ -17,7 +17,7 @@ interface BottomSheetProps {
 }
 
 /** Fraction of viewport height the sheet occupies when open. */
-const OPEN_RATIO = 1;
+const OPEN_RATIO = 0.95;
 /** px/ms — a down-fling faster than this dismisses regardless of distance. */
 const FLING_THRESHOLD = 0.4;
 /** Drag the sheet shorter than this fraction of its open height → dismiss. */
