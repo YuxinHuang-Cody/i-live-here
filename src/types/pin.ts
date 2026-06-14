@@ -46,8 +46,6 @@ interface PinFields {
  *  service decides whether to inline it (localStorage) or upload it (Supabase). */
 export interface PinDraft extends PinFields {
   category: PinCategory;
-  /** Only meaningful when kind === 'wishlist'. */
-  lookingForCompany?: boolean;
   imageBlob?: Blob;
 }
 
@@ -59,5 +57,4 @@ export interface Pin extends PinFields {
   likes: number;
   imageUrl?: string;
   category?: PinCategory;
-  lookingForCompany?: boolean;
 }

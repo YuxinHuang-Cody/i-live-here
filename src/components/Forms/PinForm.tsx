@@ -26,7 +26,6 @@ const KIND_LABEL: Record<PinKind, string> = {
 export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
   const [kind, setKind] = useState<PinKind>(initialKind);
   const [category, setCategory] = useState<PinCategory | null>(null);
-  const [lookingForCompany, setLookingForCompany] = useState(false);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [author, setAuthor] = useState(() => prefs.getLastAuthor());
@@ -73,7 +72,6 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
       await onSubmit({
         kind,
         category,
-        lookingForCompany: kind === 'wishlist' ? lookingForCompany : undefined,
         title: title.trim(),
         note: note.trim(),
         lng,
@@ -124,17 +122,6 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
           ))}
         </div>
       </div>
-
-      {kind === 'wishlist' && (
-        <label className="pin-form-check">
-          <input
-            type="checkbox"
-            checked={lookingForCompany}
-            onChange={(e) => setLookingForCompany(e.target.checked)}
-          />
-          <span>我在找人一起</span>
-        </label>
-      )}
 
       <label className="pin-form-label">
         标题

@@ -22,11 +22,10 @@ interface PinRow {
   likes: number;
   created_at: string;
   category: PinCategory | null;
-  looking_for_company: boolean | null;
 }
 
 const PIN_COLUMNS =
-  'id, kind, title, note, lng, lat, author, image_path, likes, created_at, category, looking_for_company';
+  'id, kind, title, note, lng, lat, author, image_path, likes, created_at, category';
 
 function rowToPin(row: PinRow, client: SupabaseClient): Pin {
   const imageUrl = row.image_path
@@ -44,7 +43,6 @@ function rowToPin(row: PinRow, client: SupabaseClient): Pin {
     createdAt: new Date(row.created_at).getTime(),
     imageUrl,
     category: row.category ?? undefined,
-    lookingForCompany: row.looking_for_company ? true : undefined,
   };
 }
 
@@ -103,8 +101,6 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
           image_path,
           owner_token: ownerToken,
           category: draft.category,
-          looking_for_company:
-            draft.kind === 'wishlist' ? draft.lookingForCompany === true : false,
         })
         .select(PIN_COLUMNS)
         .single();

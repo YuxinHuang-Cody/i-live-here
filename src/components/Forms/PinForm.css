@@ -119,22 +119,6 @@
   }
 }
 
-.pin-form-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #1d1d1f;
-  cursor: pointer;
-  user-select: none;
-}
-
-.pin-form-check input {
-  width: 18px;
-  height: 18px;
-  accent-color: #5856d6;
-  cursor: pointer;
-}
 
 .pin-form-input,
 .pin-form-textarea {

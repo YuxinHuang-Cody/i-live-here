@@ -45,7 +45,6 @@ function normalize(raw: Record<string, unknown>): Pin {
           ? raw.imageDataUrl
           : undefined,
     category: parseCategory(raw.category),
-    lookingForCompany: raw.lookingForCompany === true ? true : undefined,
   };
 }
 
@@ -99,7 +98,6 @@ export const localPinService: PinService = {
       createdAt: Date.now(),
       likes: 0,
       category: draft.category,
-      lookingForCompany: draft.kind === 'wishlist' && draft.lookingForCompany ? true : undefined,
     };
     const all = readAll();
     all.push(pin);

@@ -26,9 +26,6 @@ export function PinDetail({ pin, liked, owned, onToggleLike, onDelete, onClose }
             {CATEGORY_LABEL[pin.category]}
           </div>
         )}
-        {pin.kind === 'wishlist' && pin.lookingForCompany && (
-          <div className="pin-detail-tag pin-detail-tag-company">找人一起</div>
-        )}
       </div>
       <h2 className="pin-detail-title">{pin.title}</h2>
       <p className="pin-detail-meta">
