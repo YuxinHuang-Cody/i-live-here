@@ -4,8 +4,13 @@
   gap: 10px;
 }
 
+.pin-detail-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 .pin-detail-tag {
-  align-self: flex-start;
   font-size: 12px;
   font-weight: 600;
   padding: 4px 10px;
@@ -20,6 +25,16 @@
 .pin-detail-tag.kind-wishlist {
   background: rgba(88, 86, 214, 0.15);
   color: #4845b4;
+}
+
+.pin-detail-tag-category {
+  background: rgba(60, 60, 67, 0.1);
+  color: #1d1d1f;
+}
+
+.pin-detail-tag-company {
+  background: rgba(52, 199, 89, 0.15);
+  color: #1a7f3d;
 }
 
 .pin-detail-title {

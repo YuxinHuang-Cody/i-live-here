@@ -1,4 +1,4 @@
-import type { Pin } from '../../types/pin';
+import { CATEGORY_LABEL, type Pin } from '../../types/pin';
 import './PinForm.css';
 import './PinDetail.css';
 
@@ -12,14 +12,24 @@ interface Props {
 }
 
 const KIND_LABEL = {
-  doing: '我在这里做的好玩事情',
+  doing: '我在这里做过的事情',
   wishlist: '我想去做的事情',
 } as const;
 
 export function PinDetail({ pin, liked, owned, onToggleLike, onDelete, onClose }: Props) {
   return (
     <div className="pin-detail">
-      <div className={`pin-detail-tag kind-${pin.kind}`}>{KIND_LABEL[pin.kind]}</div>
+      <div className="pin-detail-tag-row">
+        <div className={`pin-detail-tag kind-${pin.kind}`}>{KIND_LABEL[pin.kind]}</div>
+        {pin.category && (
+          <div className="pin-detail-tag pin-detail-tag-category">
+            {CATEGORY_LABEL[pin.category]}
+          </div>
+        )}
+        {pin.kind === 'wishlist' && pin.lookingForCompany && (
+          <div className="pin-detail-tag pin-detail-tag-company">找人一起</div>
+        )}
+      </div>
       <h2 className="pin-detail-title">{pin.title}</h2>
       <p className="pin-detail-meta">
         <span className="pin-detail-author">@{pin.author}</span>

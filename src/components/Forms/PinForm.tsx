@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { compressImage } from '../../services/imageCompress';
 import { prefs } from '../../services/prefs';
-import { ANONYMOUS_AUTHOR, type PinDraft, type PinKind } from '../../types/pin';
+import {
+  ANONYMOUS_AUTHOR,
+  CATEGORIES,
+  type PinCategory,
+  type PinDraft,
+  type PinKind,
+} from '../../types/pin';
 import './PinForm.css';
 
 interface Props {
@@ -13,12 +19,14 @@ interface Props {
 }
 
 const KIND_LABEL: Record<PinKind, string> = {
-  doing: '我在这里做的好玩事情',
+  doing: '我在这里做过的事情',
   wishlist: '我想去做的事情',
 };
 
 export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
   const [kind, setKind] = useState<PinKind>(initialKind);
+  const [category, setCategory] = useState<PinCategory | null>(null);
+  const [lookingForCompany, setLookingForCompany] = useState(false);
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [author, setAuthor] = useState(() => prefs.getLastAuthor());
@@ -57,13 +65,15 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !category) return;
     setSubmitting(true);
     try {
       const trimmedAuthor = author.trim();
       prefs.setLastAuthor(trimmedAuthor);
       await onSubmit({
         kind,
+        category,
+        lookingForCompany: kind === 'wishlist' ? lookingForCompany : undefined,
         title: title.trim(),
         note: note.trim(),
         lng,
@@ -95,6 +105,36 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
           </button>
         ))}
       </div>
+
+      <div className="pin-form-label">
+        类型
+        <div className="pin-form-categories" role="radiogroup" aria-label="类型">
+          {CATEGORIES.map((c) => (
+            <button
+              key={c.key}
+              type="button"
+              role="radio"
+              aria-checked={category === c.key}
+              className={`pin-form-category ${category === c.key ? 'is-active' : ''}`}
+              onClick={() => setCategory(c.key)}
+            >
+              <span className="pin-form-category-label">{c.label}</span>
+              <span className="pin-form-category-hint">· {c.hint}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {kind === 'wishlist' && (
+        <label className="pin-form-check">
+          <input
+            type="checkbox"
+            checked={lookingForCompany}
+            onChange={(e) => setLookingForCompany(e.target.checked)}
+          />
+          <span>我在找人一起</span>
+        </label>
+      )}
 
       <label className="pin-form-label">
         标题
@@ -172,7 +212,7 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
         <button
           type="submit"
           className="pin-form-btn pin-form-btn-primary"
-          disabled={submitting || compressing || !title.trim()}
+          disabled={submitting || compressing || !title.trim() || !category}
         >
           {submitting ? '保存中…' : '保存'}
         </button>

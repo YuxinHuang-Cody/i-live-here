@@ -63,6 +63,69 @@
   font-weight: 500;
 }
 
+.pin-form-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pin-form-category {
+  appearance: none;
+  border: 1px solid rgba(60, 60, 67, 0.18);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  cursor: pointer;
+  color: #1d1d1f;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.pin-form-category:hover {
+  border-color: rgba(0, 122, 255, 0.5);
+}
+
+.pin-form-category.is-active {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: #007aff;
+  color: #007aff;
+}
+
+.pin-form-category-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pin-form-category-hint {
+  font-size: 12px;
+  color: #6e6e73;
+  font-weight: 400;
+}
+
+.pin-form-category.is-active .pin-form-category-hint {
+  color: rgba(0, 122, 255, 0.75);
+}
+
+.pin-form-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #1d1d1f;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pin-form-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #5856d6;
+  cursor: pointer;
+}
+
 .pin-form-input,
 .pin-form-textarea {
   appearance: none;

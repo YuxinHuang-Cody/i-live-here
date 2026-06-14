@@ -1,5 +1,11 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ANONYMOUS_AUTHOR, type Pin, type PinDraft, type PinKind } from '../types/pin';
+import {
+  ANONYMOUS_AUTHOR,
+  type Pin,
+  type PinCategory,
+  type PinDraft,
+  type PinKind,
+} from '../types/pin';
 import type { PinService } from './pinService';
 import { prefs } from './prefs';
 import { PIN_IMAGES_BUCKET, supabase } from './supabase';
@@ -15,7 +21,12 @@ interface PinRow {
   image_path: string | null;
   likes: number;
   created_at: string;
+  category: PinCategory | null;
+  looking_for_company: boolean | null;
 }
+
+const PIN_COLUMNS =
+  'id, kind, title, note, lng, lat, author, image_path, likes, created_at, category, looking_for_company';
 
 function rowToPin(row: PinRow, client: SupabaseClient): Pin {
   const imageUrl = row.image_path
@@ -32,6 +43,8 @@ function rowToPin(row: PinRow, client: SupabaseClient): Pin {
     likes: row.likes,
     createdAt: new Date(row.created_at).getTime(),
     imageUrl,
+    category: row.category ?? undefined,
+    lookingForCompany: row.looking_for_company ? true : undefined,
   };
 }
 
@@ -52,7 +65,7 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
     async list() {
       const { data, error } = await client
         .from('pins')
-        .select('id, kind, title, note, lng, lat, author, image_path, likes, created_at')
+        .select(PIN_COLUMNS)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data as PinRow[]).map((row) => rowToPin(row, client));
@@ -89,8 +102,11 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
           author,
           image_path,
           owner_token: ownerToken,
+          category: draft.category,
+          looking_for_company:
+            draft.kind === 'wishlist' ? draft.lookingForCompany === true : false,
         })
-        .select('id, kind, title, note, lng, lat, author, image_path, likes, created_at')
+        .select(PIN_COLUMNS)
         .single();
       if (error) throw error;
 
@@ -130,7 +146,7 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
       if (error) throw error;
       const { data, error: e2 } = await client
         .from('pins')
-        .select('id, kind, title, note, lng, lat, author, image_path, likes, created_at')
+        .select(PIN_COLUMNS)
         .eq('id', id)
         .single();
       if (e2) throw e2;
@@ -142,7 +158,7 @@ export function makeSupabasePinService(client: SupabaseClient): PinService {
       if (error) throw error;
       const { data, error: e2 } = await client
         .from('pins')
-        .select('id, kind, title, note, lng, lat, author, image_path, likes, created_at')
+        .select(PIN_COLUMNS)
         .eq('id', id)
         .single();
       if (e2) throw e2;

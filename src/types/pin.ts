@@ -1,5 +1,29 @@
 export type PinKind = 'doing' | 'wishlist';
 
+export type PinCategory = 'food' | 'neighborhood' | 'outdoors' | 'fitness' | 'culture';
+
+export interface CategoryOption {
+  key: PinCategory;
+  label: string;
+  hint: string;
+}
+
+export const CATEGORIES: readonly CategoryOption[] = [
+  { key: 'food', label: '美食', hint: '我做的美味食物' },
+  { key: 'neighborhood', label: '日常街区', hint: '我家楼下的小公园' },
+  { key: 'outdoors', label: '自然户外', hint: '水鸟很多的水库' },
+  { key: 'fitness', label: '运动健身', hint: '可以攀岩的城堡' },
+  { key: 'culture', label: '文化创意', hint: '和朋友一起办了读书会' },
+] as const;
+
+export const CATEGORY_LABEL: Record<PinCategory, string> = CATEGORIES.reduce(
+  (acc, c) => {
+    acc[c.key] = c.label;
+    return acc;
+  },
+  {} as Record<PinCategory, string>,
+);
+
 export const ANONYMOUS_AUTHOR = '栖居者';
 
 interface PinFields {
@@ -14,13 +38,19 @@ interface PinFields {
 /** Input shape from the form to the service. Image arrives as a Blob; the
  *  service decides whether to inline it (localStorage) or upload it (Supabase). */
 export interface PinDraft extends PinFields {
+  category: PinCategory;
+  /** Only meaningful when kind === 'wishlist'. */
+  lookingForCompany?: boolean;
   imageBlob?: Blob;
 }
 
-/** Output shape exposed to the UI. `imageUrl` may be a remote URL or a data: URL. */
+/** Output shape exposed to the UI. `imageUrl` may be a remote URL or a data: URL.
+ *  `category` is optional so historical pins (pre-category) still parse. */
 export interface Pin extends PinFields {
   id: string;
   createdAt: number;
   likes: number;
   imageUrl?: string;
+  category?: PinCategory;
+  lookingForCompany?: boolean;
 }

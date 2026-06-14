@@ -1,4 +1,4 @@
-import { ANONYMOUS_AUTHOR, type Pin, type PinDraft } from '../types/pin';
+import { ANONYMOUS_AUTHOR, CATEGORIES, type Pin, type PinCategory, type PinDraft } from '../types/pin';
 import { blobToDataUrl } from './imageCompress';
 import { supabasePinService } from './supabasePinService';
 
@@ -18,6 +18,14 @@ export interface PinService {
 
 const STORAGE_KEY = 'ilh.pins.v1';
 
+const CATEGORY_KEYS = new Set<PinCategory>(CATEGORIES.map((c) => c.key));
+
+function parseCategory(value: unknown): PinCategory | undefined {
+  return typeof value === 'string' && CATEGORY_KEYS.has(value as PinCategory)
+    ? (value as PinCategory)
+    : undefined;
+}
+
 function normalize(raw: Record<string, unknown>): Pin {
   return {
     id: String(raw.id),
@@ -36,6 +44,8 @@ function normalize(raw: Record<string, unknown>): Pin {
         : typeof raw.imageDataUrl === 'string' // back-compat with v0 storage
           ? raw.imageDataUrl
           : undefined,
+    category: parseCategory(raw.category),
+    lookingForCompany: raw.lookingForCompany === true ? true : undefined,
   };
 }
 
@@ -88,6 +98,8 @@ export const localPinService: PinService = {
       id: uid(),
       createdAt: Date.now(),
       likes: 0,
+      category: draft.category,
+      lookingForCompany: draft.kind === 'wishlist' && draft.lookingForCompany ? true : undefined,
     };
     const all = readAll();
     all.push(pin);

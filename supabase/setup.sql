@@ -19,6 +19,13 @@ create table if not exists public.pins (
   created_at  timestamptz not null default now()
 );
 
+-- New columns (nullable so historical rows keep parsing).
+alter table public.pins
+  add column if not exists category text
+    check (category is null or category in ('food','neighborhood','outdoors','fitness','culture'));
+alter table public.pins
+  add column if not exists looking_for_company boolean not null default false;
+
 create index if not exists pins_created_at_idx on public.pins (created_at desc);
 
 -- ---- RLS ------------------------------------------------------
@@ -26,7 +33,7 @@ alter table public.pins enable row level security;
 
 -- Anon must not be able to read other people's owner_token.
 revoke select on public.pins from anon, authenticated;
-grant  select (id, kind, title, note, lng, lat, author, image_path, likes, created_at)
+grant  select (id, kind, title, note, lng, lat, author, image_path, likes, created_at, category, looking_for_company)
        on public.pins to anon, authenticated;
 
 drop policy if exists "pins are readable by everyone" on public.pins;
