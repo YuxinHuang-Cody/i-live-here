@@ -85,7 +85,16 @@ $$;
 grant execute on function public.delete_pin(uuid, text) to anon, authenticated;
 
 -- ---- realtime -------------------------------------------------
-alter publication supabase_realtime add table public.pins;
+-- Idempotent: skip if pins is already in the publication.
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'pins'
+  ) then
+    alter publication supabase_realtime add table public.pins;
+  end if;
+end $$;
 
 -- ---- storage bucket ------------------------------------------
 insert into storage.buckets (id, name, public)
