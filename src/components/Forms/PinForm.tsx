@@ -119,7 +119,7 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
               onClick={() => setCategory(c.key)}
             >
               <span className="pin-form-category-label">{c.label}</span>
-              <span className="pin-form-category-hint">· {c.hint}</span>
+              <span className="pin-form-category-hint">{c.hint}</span>
             </button>
           ))}
         </div>

@@ -21,8 +21,11 @@ create table if not exists public.pins (
 
 -- New columns (nullable so historical rows keep parsing).
 alter table public.pins
-  add column if not exists category text
-    check (category is null or category in ('food','neighborhood','outdoors','fitness','culture'));
+  add column if not exists category text;
+-- Drop & recreate the CHECK so re-running the script picks up new categories.
+alter table public.pins drop constraint if exists pins_category_check;
+alter table public.pins add constraint pins_category_check
+  check (category is null or category in ('food','neighborhood','outdoors','fitness','culture','other'));
 alter table public.pins
   add column if not exists looking_for_company boolean not null default false;
 

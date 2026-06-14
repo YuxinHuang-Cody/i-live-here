@@ -1,6 +1,12 @@
 export type PinKind = 'doing' | 'wishlist';
 
-export type PinCategory = 'food' | 'neighborhood' | 'outdoors' | 'fitness' | 'culture';
+export type PinCategory =
+  | 'food'
+  | 'neighborhood'
+  | 'outdoors'
+  | 'fitness'
+  | 'culture'
+  | 'other';
 
 export interface CategoryOption {
   key: PinCategory;
@@ -10,10 +16,11 @@ export interface CategoryOption {
 
 export const CATEGORIES: readonly CategoryOption[] = [
   { key: 'food', label: '美食', hint: '我做的美味食物' },
-  { key: 'neighborhood', label: '日常街区', hint: '我家楼下的小公园' },
-  { key: 'outdoors', label: '自然户外', hint: '水鸟很多的水库' },
-  { key: 'fitness', label: '运动健身', hint: '可以攀岩的城堡' },
-  { key: 'culture', label: '文化创意', hint: '和朋友一起办了读书会' },
+  { key: 'neighborhood', label: '街区', hint: '楼下公园' },
+  { key: 'outdoors', label: '自然', hint: '水鸟很多的水库' },
+  { key: 'fitness', label: '运动', hint: '可以攀岩的城堡' },
+  { key: 'culture', label: '文化创意', hint: '和朋友一起办读书会' },
+  { key: 'other', label: '其他', hint: '私人角落等' },
 ] as const;
 
 export const CATEGORY_LABEL: Record<PinCategory, string> = CATEGORIES.reduce(
