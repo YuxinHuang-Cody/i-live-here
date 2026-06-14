@@ -130,7 +130,6 @@ export function PinForm({ initialKind, lng, lat, onSubmit, onCancel }: Props) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="例如：我在这里吃了 fish & chips"
-          autoFocus
           maxLength={80}
         />
       </label>
